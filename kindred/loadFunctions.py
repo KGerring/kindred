@@ -19,7 +19,7 @@ def loadEntity(filename,line,text):
 	entityID = split[0]
 	typeInfo = split[1]
 	tokens = split[2]
-		
+
 	textChunks = []
 	typeSpacePos = typeInfo.index(' ')
 	typeName = typeInfo[:typeSpacePos]
@@ -31,7 +31,7 @@ def loadEntity(filename,line,text):
 		textChunk = text[a:b].replace('\n',' ').strip()
 		textChunks.append(textChunk)
 		positions.append((a,b))
-		
+
 	# Check that the tokens match up to the text
 	chunkTest = " ".join(textChunks)
 	tokensTest = tokens
@@ -40,25 +40,28 @@ def loadEntity(filename,line,text):
 	chunkTest = chunkTest.strip()
 	tokensTest = tokensTest.strip()
 
-	assert chunkTest == tokensTest , u"ERROR in " + filename + u"For id=" + entityID + ", tokens '" + tokens.encode('ascii', 'ignore') + "' don't match up with positions: " + str(positions)
-	
-	entity = kindred.Entity(typeName, tokensTest, positions, entityID)
+	assert chunkTest == tokensTest, (
+	    f'ERROR in {filename}For id={entityID}' + ", tokens '" + tokens.encode(
+	        'ascii',
+	        'ignore') + "' don't match up with positions: " + str(positions))
 
-	return entity
+	return kindred.Entity(typeName, tokensTest, positions, entityID)
 	
 def loadRelation(filename,line,ignoreComplexRelations=True):
-	assert line[0] == 'E' or line[0] == 'R', "ERROR in %s. Relation input should start with a E or R" % filename
+	assert line[0] in [
+	    'E', 'R'
+	], ("ERROR in %s. Relation input should start with a E or R" % filename)
 	assert ignoreComplexRelations == True, "ERROR in %s. ignoreComplexRelations must be True as kindred doesn't currently support complex relations" % filename
 
 	split = line.strip().split('\t')
 	sourceRelationID = split[0]
 	relationInfo = split[1]
 	typeSpacePos = relationInfo.index(' ')
-	
+
 	relationNameSplit = relationInfo[:typeSpacePos].split(':')
 	assert len(relationNameSplit) == 1, "ERROR in %s. Cannot load relations with triggers" % filename
 	relationType = relationNameSplit[0]
-		
+
 	isComplexRelation = False
 	argumentText = relationInfo[typeSpacePos:]
 	arguments = []
@@ -68,7 +71,7 @@ def loadRelation(filename,line,ignoreComplexRelations=True):
 		tmpArgName = split2[0]
 		tmpEntityID = split2[1]
 
-		isComplexRelation = (tmpEntityID[0] == 'R' or tmpEntityID[0] == 'E')
+		isComplexRelation = tmpEntityID[0] in ['R', 'E']
 
 		# We'll skip this relation as
 		if ignoreComplexRelations and isComplexRelation:
@@ -76,7 +79,7 @@ def loadRelation(filename,line,ignoreComplexRelations=True):
 
 		assert not isComplexRelation, "ERROR in %s. kindred does not support complex relations (where one relation has another relation as an argument), use ignoreComplexRelations=True to ignore these" % filename
 
-		assert not tmpArgName in arguments, "ERROR in %s" % filename
+		assert tmpArgName not in arguments, "ERROR in %s" % filename
 		arguments.append((tmpArgName,tmpEntityID))
 
 	if ignoreComplexRelations and isComplexRelation:
@@ -86,8 +89,7 @@ def loadRelation(filename,line,ignoreComplexRelations=True):
 	sourceEntityIDs = [ entityID for argName,entityID in arguments ]
 	argNames = [ argName for argName,entityID in arguments ]
 
-	relationTuple = (sourceRelationID,relationType,sourceEntityIDs,argNames)
-	return relationTuple
+	return sourceRelationID, relationType, sourceEntityIDs, argNames
 	
 # TODO: Deal with complex relations more clearly
 def loadDataFromStandoff(txtFile,ignoreEntities=[],ignoreComplexRelations=True):
@@ -110,9 +112,9 @@ def loadDataFromStandoff(txtFile,ignoreEntities=[],ignoreComplexRelations=True):
 			for line in f:
 				if line.startswith('T'):
 					entity = loadEntity(annotationFile,line.strip(), text)
-					if (not entity is None) and (not entity.entityType in ignoreEntities):
+					if entity is not None and entity.entityType not in ignoreEntities:
 						entities.append(entity)
-		
+
 	sourceEntityIDToEntity = { entity.sourceEntityID:entity for entity in entities }
 
 	relations = []
@@ -121,7 +123,7 @@ def loadDataFromStandoff(txtFile,ignoreEntities=[],ignoreComplexRelations=True):
 			for line in f:
 				if line.startswith('E') or line.startswith('R'):
 					relationTuple = loadRelation(annotationFile,line.strip(),ignoreComplexRelations)
-					if not relationTuple is None:
+					if relationTuple is not None:
 						sourceRelationID,relationType,sourceEntityIDs,argNames = relationTuple
 						for sourceEntityID in sourceEntityIDs:
 							assert sourceEntityID in sourceEntityIDToEntity, "Relation exists that references a non-existent entity (%s) associated with %s" % (sourceEntityID,txtFile)
@@ -130,11 +132,10 @@ def loadDataFromStandoff(txtFile,ignoreEntities=[],ignoreComplexRelations=True):
 						relations.append(relation)
 
 	baseTxtFile = os.path.basename(txtFile)
-	baseFilename = baseTxtFile[0:-4]
+	baseFilename = baseTxtFile[:-4]
 
-	combinedData = kindred.Document(text,entities=entities,relations=relations,sourceFilename=baseFilename)
-			
-	return combinedData
+	return kindred.Document(
+	    text, entities=entities, relations=relations, sourceFilename=baseFilename)
 
 def parsePubAnnotationJSON(data,ignoreEntities=[]):
 	entities = []
@@ -148,17 +149,14 @@ def parsePubAnnotationJSON(data,ignoreEntities=[]):
 	text = data['text']
 	if 'denotations' in data:
 		for d in data['denotations']:
-			sourceEntityID = None
-			if 'id' in d:
-				sourceEntityID = d['id']
-			
+			sourceEntityID = d['id'] if 'id' in d else None
 			entityType = d['obj']
 			span = d['span']
 			startPos,endPos = span['begin'],span['end']
 			position = [(startPos,endPos)]
 			entityText = text[startPos:endPos]
-			
-			if not entityType in ignoreEntities:
+
+			if entityType not in ignoreEntities:
 				entity = kindred.Entity(entityType,entityText,position,sourceEntityID=sourceEntityID)
 				entities.append(entity)
 
@@ -170,21 +168,21 @@ def parsePubAnnotationJSON(data,ignoreEntities=[]):
 			obj = r['obj']
 			relationType = r['pred']
 			subj = r['subj']
-			
+
 			sourceEntityIDs = [subj,obj]
 			argNames = ['subj','obj']
 			entitiesInRelation = [ sourceEntityIDToEntity[sourceEntityID] for sourceEntityID in sourceEntityIDs ]
-		
+
 			relation = kindred.Relation(relationType,entitiesInRelation,argNames,sourceRelationID=rID)
 			relations.append(relation)
-	
-	expected = ['denotations','divid','modifications','namespaces','project','relations','sourcedb','sourceid','target','text','tracks','typesettings','source_url']
-	extraFields = [ k for k in data.keys() if not k in expected]
-	assert len(extraFields) == 0, "Found additional unexpected fields (%s) in PubAnnotation JSON" % (",".join(extraFields))
-		
-	combinedData = kindred.Document(text,entities=entities,relations=relations)
 
-	return combinedData
+	expected = ['denotations','divid','modifications','namespaces','project','relations','sourcedb','sourceid','target','text','tracks','typesettings','source_url']
+	extraFields = [k for k in data.keys() if k not in expected]
+	assert (not extraFields
+	        ), "Found additional unexpected fields (%s) in PubAnnotation JSON" % (
+	            ",".join(extraFields))
+
+	return kindred.Document(text,entities=entities,relations=relations)
 
 def loadDataFromPubAnnotationJSON(filename,ignoreEntities=[]):
 	with open(filename) as f:
@@ -205,10 +203,10 @@ def parseSimpleTag_helper(node,currentPosition=0,ignoreEntities=[]):
 				relationType = s.getAttribute('type')
 				arguments = [ (argName,entityID) for argName,entityID in s.attributes.items() if argName != 'type' ]
 				arguments = sorted(arguments)
-				
+
 				sourceEntityIDs = [ sourceEntityID for argName,sourceEntityID in arguments]
 				argNames = [ argName for argName,sourceEntityID in arguments]
-				
+
 
 				relationTuple = (relationType,sourceEntityIDs,argNames)
 				relationTuples.append(relationTuple)
@@ -219,16 +217,16 @@ def parseSimpleTag_helper(node,currentPosition=0,ignoreEntities=[]):
 
 				assert len(insideText) > 0, "Name (text inside tags) is empty for entity of type %s" % entityType
 
-				if not entityType in ignoreEntities:
+				if entityType not in ignoreEntities:
 					e = kindred.Entity(entityType,insideText,position,sourceEntityID=sourceEntityID)
 					entities.append(e)
-				
+
 			text += insideText
 			entities += insideEntities
 			relationTuples += insideRelationTuples
 		elif s.nodeType == s.TEXT_NODE:
 			text += s.nodeValue
-			
+
 	return text,entities,relationTuples
 	
 def mergeEntitiesWithMatchingIDs(unmergedEntities):
@@ -238,11 +236,11 @@ def mergeEntitiesWithMatchingIDs(unmergedEntities):
 	for e in unmergedEntities:
 		assert isinstance(e, kindred.Entity)
 		if e.sourceEntityID in entityDict:
-			entityDict[e.sourceEntityID].text += " " + e.text
+			entityDict[e.sourceEntityID].text += f' {e.text}'
 			entityDict[e.sourceEntityID].position += e.position
 		else:
 			entityDict[e.sourceEntityID] = e
-			
+
 	return list(entityDict.values())
 	
 def parseSimpleTag(text,ignoreEntities=[]):
@@ -250,17 +248,17 @@ def parseSimpleTag(text,ignoreEntities=[]):
 	xmldoc = minidom.parseString(docText.encode('utf8'))
 	docNode = xmldoc.childNodes[0]
 	text,unmergedEntities,relationTuples = parseSimpleTag_helper(docNode,ignoreEntities=ignoreEntities)
-	
+
 	missingSourceEntityID = [ e.sourceEntityID == '' for e in unmergedEntities ]
 	assert all(missingSourceEntityID) or (not any(missingSourceEntityID)), 'All entities or none (not some) should be given IDs'
 	assert (not any(missingSourceEntityID)) or len(relationTuples) == 0, "Cannot include relations with no-ID entities"
-	
+
 	if all(missingSourceEntityID):
 		for i,e in enumerate(unmergedEntities):
 			e.sourceEntityID = i+1
-					
+
 	entities = mergeEntitiesWithMatchingIDs(unmergedEntities)
-		
+
 	sourceEntityIDToEntity = { entity.sourceEntityID:entity for entity in entities }
 
 	relations = []
@@ -270,8 +268,7 @@ def parseSimpleTag(text,ignoreEntities=[]):
 		relation = kindred.Relation(relationType=relationType,entities=entitiesInRelation,argNames=argNames)
 		relations.append(relation)
 
-	combinedData = kindred.Document(text,entities=entities,relations=relations)
-	return combinedData
+	return kindred.Document(text,entities=entities,relations=relations)
 
 def convertBiocDocToKindredDocs(document):
 	assert isinstance(document,bioc.BioCDocument)

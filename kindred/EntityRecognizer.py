@@ -14,28 +14,24 @@ import os
 
 def acronymMatch(words,pos,currentAcronym,atStart,subpos=None):
 	if len(currentAcronym) == 0:
-		if not (subpos is None): # Can't finish acronym mid-word
-			return []
-		else:
-			return [pos+1]
-
+		return [] if subpos is not None else [pos+1]
 	curWord = words[pos].lower()
 	wordSplit = curWord.split('-')
 	curLetter = currentAcronym[-1]
-	
+
 	moves = []
-	
+
 	if subpos is None:
 		if atStart and curLetter == 's' and curWord[-1] == 's':
 			# Possible plural
 			moves.append( (words,pos,currentAcronym[:-1],False) )
-			
+
 		if curLetter == curWord[0]:
 			moves.append( (words,pos-1,currentAcronym[:-1],False) )
 
 		if curWord == '-':
 			moves.append( (words,pos-1,currentAcronym,False) )
-			
+
 
 	if len(wordSplit) > 1:
 		if subpos is None:
@@ -45,11 +41,11 @@ def acronymMatch(words,pos,currentAcronym,atStart,subpos=None):
 				moves.append( (words,pos-1,currentAcronym[:-1],False) )
 			else:
 				moves.append( (words,pos,currentAcronym[:-1],False,subpos-1) )
-			
+
 	possibleStarts = []
 	for move in moves:
 		possibleStarts += acronymMatch(*move)
-		
+
 	return possibleStarts
 
 def acronymDetection(words):
@@ -75,7 +71,7 @@ def mergeWordsForFusionDetection(words):
 	for i,w in enumerate(words):
 		if w in mergeChars:
 			prevWord += w
-		elif len(prevWord) > 0 and prevWord[-1] in mergeChars:
+		elif prevWord != '' and prevWord[-1] in mergeChars:
 			prevWord += w
 		else:
 			if prevWord:
@@ -100,9 +96,9 @@ def fusionGeneDetection(words, lookupDict):
 		fusionCount = len(split)
 		if fusionCount == 1:
 			continue
-			
+
 		allGenes = True
-		
+
 		geneIDs = []
 		lookupIDCounter = Counter()
 		for s in split:
@@ -124,11 +120,9 @@ def fusionGeneDetection(words, lookupDict):
 				allGenes = False
 				break
 
-		# We're going to check if there are any lookup IDs shared among all the "fusion" terms
-		# Hence this may not actually be a fusion, but just using multiple names of a gene
-		# e.g. HER2/neu
-		completeLookupIDs = [ id for id,count in lookupIDCounter.items() if count == fusionCount ]
-		if len(completeLookupIDs) > 0:
+		if completeLookupIDs := [
+		    id for id, count in lookupIDCounter.items() if count == fusionCount
+		]:
 			termtypesAndids.append([('gene',';'.join(completeLookupIDs))])
 			terms.append(tuple(origWords[start:end+1]))
 			locs.append((start,end+1))
@@ -138,7 +132,7 @@ def fusionGeneDetection(words, lookupDict):
 			termtypesAndids.append([('gene','combo|' + '|'.join(geneIDs))])
 			terms.append(tuple(origWords[start:end+1]))
 			locs.append((start,end+1))
-		
+
 	return locs,terms,termtypesAndids
 
 def getTermIDsAndLocations(sentence, lookupDict):

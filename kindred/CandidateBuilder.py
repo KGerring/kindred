@@ -55,16 +55,17 @@ class CandidateBuilder:
 
 			for sentence in doc.sentences:
 				entitiesInSentence = [ entity for entity,tokenIndices in sentence.entityAnnotations ]
-							
+
 				for entitiesInRelation in itertools.permutations(entitiesInSentence, self.entityCount):
-					typesInRelation = tuple([ e.entityType for e in entitiesInRelation ])
-					if not self.acceptedEntityTypes is None and not typesInRelation in self.acceptedEntityTypes:
+					typesInRelation = tuple(e.entityType for e in entitiesInRelation)
+					if (self.acceptedEntityTypes is not None
+					    and typesInRelation not in self.acceptedEntityTypes):
 						# Relation doesn't contain the right entity types (so skip it)
 						continue
 
 					knownTypesAndArgNames = list(set(existingRelationsAndArgNames[entitiesInRelation]))
 					knownTypesAndArgNames = [ (relationType,list(argNames)) for relationType,argNames in knownTypesAndArgNames ]
-				
+
 					candidateRelation = kindred.CandidateRelation(entities=list(entitiesInRelation),knownTypesAndArgNames=knownTypesAndArgNames,sentence=sentence)
 					candidates.append(candidateRelation)
 

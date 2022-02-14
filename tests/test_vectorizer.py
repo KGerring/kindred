@@ -6,8 +6,6 @@ import json
 from kindred.datageneration import generateData,generateTestData
 
 def check(valueName,value):
-	write = False
-
 	scriptDir = os.path.dirname(__file__)
 	jsonPath = os.path.join(scriptDir,'data','vectorizer','expected.json')
 	if os.path.isfile(jsonPath):
@@ -15,8 +13,8 @@ def check(valueName,value):
 			data = json.load(f)
 	else:
 		data = {}
-	
-	if write:
+
+	if write := False:
 		data[valueName] = value
 		with open(jsonPath,'w') as f:
 			json.dump(data,f,indent=2,sort_keys=True)

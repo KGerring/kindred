@@ -50,8 +50,8 @@ class QuantityRecognizer:
 
 if __name__ == '__main__':
 
-	text = "We measured the voltage at 5 volts. "
-	text += "We tested our 5 samples for current. "
+	text = ("We measured the voltage at 5 volts. " +
+	        "We tested our 5 samples for current. ")
 	text += "Blah et al calculated a current of 3.1 amps. "
 	text += "5 of the 8 samples weren't tested for voltage. "
 	text += "The mean voltage was 4 V across all of the samples. "

@@ -11,28 +11,28 @@ def _doEntityTypes(candidates,entityCount):
 	data = []
 	for cr in candidates:
 		assert isinstance(cr,kindred.CandidateRelation)
-		
-		tokenInfo = {}
-		for argI,entity in enumerate(cr.entities):
-			argName = "selectedtokentypes_%d_%s" % (argI,entity.entityType)
-			tokenInfo[argName] = 1
+
+		tokenInfo = {
+		    "selectedtokentypes_%d_%s" % (argI, entity.entityType): 1
+		    for argI, entity in enumerate(cr.entities)
+		}
 		data.append(tokenInfo)
 	return data
 
 def _doUnigramsBetweenEntities(candidates,entityCount):
-	data = []	
+	data = []
 	for cr in candidates:
 		assert isinstance(cr,kindred.CandidateRelation)
-		
+
 		sentence = cr.sentence
 		dataForThisCR = Counter()
 		entityCount = len(cr.entities)
-		entityToTokenIndices = { e:tokenIndices for e,tokenIndices in cr.sentence.entityAnnotations }
-		
+		entityToTokenIndices = dict(cr.sentence.entityAnnotations)
+
 		for e1,e2 in itertools.combinations(range(entityCount),2):
 			pos1 = entityToTokenIndices[cr.entities[e1]]
 			pos2 = entityToTokenIndices[cr.entities[e2]]
-			
+
 			if max(pos1) < min(pos2):
 				startPos,endPos = max(pos1)+1,min(pos2)
 			else:
@@ -51,12 +51,12 @@ def _doUnigramsBetweenEntities(candidates,entityCount):
 	return data
 
 def _doDependencyPathEdges(candidates,entityCount):
-	data = []	
+	data = []
 	for cr in candidates:
 		assert isinstance(cr,kindred.CandidateRelation)
 		sentence = cr.sentence
-		entityToTokenIndices = { e:tokenIndices for e,tokenIndices in cr.sentence.entityAnnotations }
-		
+		entityToTokenIndices = dict(cr.sentence.entityAnnotations)
+
 		entityCount = len(cr.entities)
 		dataForThisCR = Counter()
 		for e1,e2 in itertools.combinations(range(entityCount),2):
@@ -64,7 +64,7 @@ def _doDependencyPathEdges(candidates,entityCount):
 			pos2 = entityToTokenIndices[cr.entities[e2]]
 
 			combinedPos = pos1 + pos2
-			
+
 			basename = u"dependencypathelements"
 			if entityCount > 2:
 				basename = u"dependencypathelements_%d_%d" % (e1,e2)
@@ -77,18 +77,18 @@ def _doDependencyPathEdges(candidates,entityCount):
 	return data
 
 def _doDependencyPathEdgesNearEntities(candidates,entityCount):
-	data = []	
+	data = []
 	for cr in candidates:
 		assert isinstance(cr,kindred.CandidateRelation)
 		sentence = cr.sentence
-		entityToTokenIndices = { e:tokenIndices for e,tokenIndices in cr.sentence.entityAnnotations }
-		
+		entityToTokenIndices = dict(cr.sentence.entityAnnotations)
+
 		dataForThisCR = Counter()
 
 		allEntityLocs = []
 		for e in cr.entities:
 			allEntityLocs += entityToTokenIndices[e]
-		
+
 		nodes,edges = sentence.extractMinSubgraphContainingNodes(allEntityLocs)
 		for i,e in enumerate(cr.entities):
 			pos = entityToTokenIndices[e]
@@ -166,12 +166,28 @@ class Vectorizer:
 		self.tfidfTransformers = {}
 
 	def _registerFunctions(self):
-		self.featureInfo = {}
-		self.featureInfo['entityTypes'] = {'func':_doEntityTypes,'never_tfidf':True}
-		self.featureInfo['unigramsBetweenEntities'] = {'func':_doUnigramsBetweenEntities,'never_tfidf':False}
-		self.featureInfo['bigrams'] = {'func':_doBigrams,'never_tfidf':False}
-		self.featureInfo['dependencyPathEdges'] = {'func':_doDependencyPathEdges,'never_tfidf':True}
-		self.featureInfo['dependencyPathEdgesNearEntities'] = {'func':_doDependencyPathEdgesNearEntities,'never_tfidf':True}
+		self.featureInfo = {
+		    'entityTypes': {
+		        'func': _doEntityTypes,
+		        'never_tfidf': True
+		    },
+		    'unigramsBetweenEntities': {
+		        'func': _doUnigramsBetweenEntities,
+		        'never_tfidf': False,
+		    },
+		    'bigrams': {
+		        'func': _doBigrams,
+		        'never_tfidf': False
+		    },
+		    'dependencyPathEdges': {
+		        'func': _doDependencyPathEdges,
+		        'never_tfidf': True,
+		    },
+		    'dependencyPathEdgesNearEntities': {
+		        'func': _doDependencyPathEdgesNearEntities,
+		        'never_tfidf': True,
+		    },
+		}
 				
 	def getFeatureNames(self):
 		"""
@@ -193,16 +209,15 @@ class Vectorizer:
 		assert len(candidates) > 0
 		for c in candidates:
 			assert isinstance(c,kindred.CandidateRelation)
-			
+
 		matrices = []
 		for feature in self.chosenFeatures:
 			assert feature in self.featureInfo.keys()
 			featureFunction = self.featureInfo[feature]['func']
 			never_tfidf = self.featureInfo[feature]['never_tfidf']
 			data = featureFunction(candidates,self.entityCount)
-			notEmpty = any( len(d)>0 for d in data )
 			if fit:
-				if notEmpty:
+				if notEmpty := any(len(d) > 0 for d in data):
 					self.dictVectorizers[feature] = DictVectorizer()
 					if self.tfidf and not never_tfidf:
 						self.tfidfTransformers[feature] = TfidfTransformer()
@@ -210,16 +225,14 @@ class Vectorizer:
 						matrices.append(self.tfidfTransformers[feature].fit_transform(intermediate))
 					else:
 						matrices.append(self.dictVectorizers[feature].fit_transform(data))
-			else:
-				if feature in self.dictVectorizers:
-					if self.tfidf and not never_tfidf:
-						intermediate = self.dictVectorizers[feature].transform(data)
-						matrices.append(self.tfidfTransformers[feature].transform(intermediate))
-					else:
-						matrices.append(self.dictVectorizers[feature].transform(data))
+			elif feature in self.dictVectorizers:
+				if self.tfidf and not never_tfidf:
+					intermediate = self.dictVectorizers[feature].transform(data)
+					matrices.append(self.tfidfTransformers[feature].transform(intermediate))
+				else:
+					matrices.append(self.dictVectorizers[feature].transform(data))
 
-		mergedMatrix = hstack(matrices)
-		return mergedMatrix
+		return hstack(matrices)
 			
 	def fit_transform(self,candidates):
 		"""

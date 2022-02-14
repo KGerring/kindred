@@ -42,7 +42,7 @@ def manuallyAnnotate(corpus,candidateRelations):
 
 	print()
 	print("For each sentence, choose an existing option or type the name of a new annotation")
-	
+
 	endAnnotation = False
 	crCounter = 0
 	#for sentence,crsInSentence in groupedBySentences.items():
@@ -74,7 +74,7 @@ def manuallyAnnotate(corpus,candidateRelations):
 				charByChar[end1-1] += bcolors.ENDC
 				charByChar[start2] = bcolors.OKGREEN + charByChar[start2]
 				charByChar[end2-1] += bcolors.ENDC
-				
+
 				sentence = "".join(charByChar)
 
 				print()
@@ -90,7 +90,7 @@ def manuallyAnnotate(corpus,candidateRelations):
 				if response == 'x':
 					endAnnotation = True
 					break
-				elif response and not response in optionTxt:
+				elif response and response not in optionTxt:
 					newKey = str(len(options)-1)
 					options[newKey] = response
 				else:

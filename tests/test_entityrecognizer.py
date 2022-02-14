@@ -2,38 +2,30 @@ import kindred
 import os
 
 def makeTestLookup():
-	lookup = {}
-	lookup['epidermal growth factor receptor'] = [('gene','HGNC:3236'),('dummy','ID:1234')]
-	#lookup[('epidermal','growth','factor','receptor')] = [('gene','HGNC:3236')]
-	lookup['egfr'] = [('gene','HGNC:3236')]
-
-	lookup['erbb2'] = [('gene','HGNC:2064')]
-	lookup['fgfr3'] = [('gene','HGNC:3690')]
-	lookup['tacc3'] = [('gene','HGNC:11524')]
-
-	lookup['her2'] = [('gene','HGNC:2064')]
-	lookup['neu'] = [('gene','HGNC:2064')]
-	lookup['neus'] = [('gene','HGNC:????')]
-
-	lookup['glp-1r'] = [('gene','HGNC:4191;HGNC:4324;HGNC:37245')]
-	lookup['glp1r'] = [('gene','HGNC:4324')]
-	lookup['glp1'] = [('gene','HGNC:4191;HGNC:37245')]
-	lookup['glp-1'] = [('gene','HGNC:4191;HGNC:4324')]
-
-	lookup['non-small cell lung carcinoma'] = [('cancer','DOID:3908')]
-	lookup['nsclc'] = [('cancer','DOID:3908')]
-	lookup['dlbcl'] = [('cancer','DOID:0050745')]
-	lookup['lymphoma'] = [('cancer','DOID:0060058')]
-
-	lookup['never ending umbrella'] = [('movie','IMDB:9999')]
-	lookup['never ending umbrellas'] = [('movie','IMDB:9999')]
-
-	lookupSets = {}
-	for termid,idlist in lookup.items():
-		#termid = " ".join(list(termid))
-		lookupSets[termid] = set(idlist)
-
-	return lookupSets
+	lookup = {
+	    'epidermal growth factor receptor': [
+	        ('gene', 'HGNC:3236'),
+	        ('dummy', 'ID:1234'),
+	    ],
+	    'egfr': [('gene', 'HGNC:3236')],
+	    'erbb2': [('gene', 'HGNC:2064')],
+	    'fgfr3': [('gene', 'HGNC:3690')],
+	    'tacc3': [('gene', 'HGNC:11524')],
+	    'her2': [('gene', 'HGNC:2064')],
+	    'neu': [('gene', 'HGNC:2064')],
+	    'neus': [('gene', 'HGNC:????')],
+	    'glp-1r': [('gene', 'HGNC:4191;HGNC:4324;HGNC:37245')],
+	    'glp1r': [('gene', 'HGNC:4324')],
+	    'glp1': [('gene', 'HGNC:4191;HGNC:37245')],
+	    'glp-1': [('gene', 'HGNC:4191;HGNC:4324')],
+	    'non-small cell lung carcinoma': [('cancer', 'DOID:3908')],
+	    'nsclc': [('cancer', 'DOID:3908')],
+	    'dlbcl': [('cancer', 'DOID:0050745')],
+	    'lymphoma': [('cancer', 'DOID:0060058')],
+	    'never ending umbrella': [('movie', 'IMDB:9999')],
+	    'never ending umbrellas': [('movie', 'IMDB:9999')],
+	}
+	return {termid: set(idlist) for termid,idlist in lookup.items()}
 
 def test_entityrecognizer_basic():
 	lookup = makeTestLookup()

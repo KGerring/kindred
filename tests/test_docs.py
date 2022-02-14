@@ -16,7 +16,9 @@ def test_docs():
 	hasWarningOrError = [ line for line in output.split('\n') if isinstance(line,str) and ("warning" in line.lower() or "error" in line.lower()) ]
 	for line in hasWarningOrError:
 		print(line)
-	assert len(hasWarningOrError) == 0, "Found %d lines with a warning or error in document build" % (len(hasWarningOrError))
+	assert (not hasWarningOrError
+	        ), "Found %d lines with a warning or error in document build" % (
+	            len(hasWarningOrError))
 
 if __name__ == '__main__':
 	test_docs()

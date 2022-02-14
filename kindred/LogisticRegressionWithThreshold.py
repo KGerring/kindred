@@ -54,10 +54,7 @@ class LogisticRegressionWithThreshold:
 		# Make sure that the zero class is only select if all other options are below the threshold
 		probs[:,0] = -0.5
 
-		# And get the highest probability for each row
-		predictions = np.argmax(probs,axis=1)
-
-		return predictions
+		return np.argmax(probs,axis=1)
 
 	def predict_proba(self,X):
 		"""

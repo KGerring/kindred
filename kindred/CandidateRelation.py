@@ -65,7 +65,9 @@ class CandidateRelation:
 		return self.__str__()
 
 	def __hash__(self):
-		knownTypesAndArgNamesToTuple = tuple([ (knownType,tuple(knownArgNames)) for knownType,knownArgNames in self.knownTypesAndArgNames ])
+		knownTypesAndArgNamesToTuple = tuple(
+		    (knownType, tuple(knownArgNames))
+		    for knownType, knownArgNames in self.knownTypesAndArgNames)
 
 		return hash((tuple(self.entities),knownTypesAndArgNamesToTuple,self.sentence))
 

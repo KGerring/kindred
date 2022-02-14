@@ -16,24 +16,24 @@ def load(projectName):
 	:rtype: kindred.Corpus
 	"""
 	projectURL = "http://pubannotation.org/projects/%s/docs.json" % projectName
-	
+
 	loaded = kindred.Corpus()
-	
+
 	docs = requests.get(projectURL)
 	for doc in docs.json():
 		m = re.search("sourcedb/(?P<sourcedb>[^\/]*)/sourceid/(?P<sourceid>[0-9]*)",doc['url'])
 		mDict = m.groupdict()
-		
+
 		assert 'sourcedb' in mDict
 		assert 'sourceid' in mDict
-		
+
 		annotationsURL = "http://pubannotation.org/projects/%s/docs/sourcedb/%s/sourceid/%s/annotations.json" % (projectName,mDict['sourcedb'],mDict['sourceid'])
-		
+
 		annotations = requests.get(annotationsURL).json()
-		
-		
-		assert isinstance(annotations,list) or isinstance(annotations,dict)
-		
+
+
+		assert isinstance(annotations, (list, dict))
+
 		if isinstance(annotations,list):
 			for annotation in annotations:
 				parsed = kindred.loadFunctions.parsePubAnnotationJSON(annotation)
@@ -41,7 +41,7 @@ def load(projectName):
 		elif isinstance(annotations,dict):
 			parsed = kindred.loadFunctions.parsePubAnnotationJSON(annotations)
 			loaded.addDocument(parsed)
-	
+
 	return loaded
 	
 	

@@ -40,13 +40,13 @@ class Relation:
 			assert isinstance(entity, kindred.Entity), "entities must be a list of kindred.Entity"
 		self.entities = entities
 
-		if argNames == None:
+		if argNames is None:
 			self.argNames = None
 		else:
 			assert len(argNames) == len(entities)
 			self.argNames = [ str(a) for a in argNames ]
 
-		if not probability is None:
+		if probability is not None:
 			assert isinstance(probability, float)
 		self.probability = probability
 
