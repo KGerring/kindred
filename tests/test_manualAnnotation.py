@@ -12,8 +12,10 @@ class FakeInput:
 		return nextOne
 
 def test_manuallyAnnotate(monkeypatch):
-	text1 = "<drug>Erlotinib</drug> is an <gene>EGFR</gene> inhibitor. "
-	text1 += "<gene>EGFR</gene> and <drug>Erlotinib</drug> are terms associated with lung cancer. "
+	text1 = (
+	    "<drug>Erlotinib</drug> is an <gene>EGFR</gene> inhibitor. " +
+	    "<gene>EGFR</gene> and <drug>Erlotinib</drug> are terms associated with lung cancer. "
+	)
 	text1 += "The drug <drug>Gefitinib</drug> targets <gene>EGFR</gene>. "
 	text2 = "<drug>Herceptin</drug> targets <gene>HER2</gene> receptor."
 

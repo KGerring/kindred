@@ -38,10 +38,10 @@ def _downloadFiles(files,downloadDirectory):
 
 	for url,shortName,expectedSHA256 in files:
 		downloadedPath = os.path.join(downloadDirectory,shortName)
-	
+
 		if os.path.isfile(downloadedPath):
 			downloadedSHA256 = _calcSHA256(downloadedPath)
-			if not downloadedSHA256 == expectedSHA256:
+			if downloadedSHA256 != expectedSHA256:
 				os.remove(downloadedPath)
 
 		if not os.path.isfile(downloadedPath):
@@ -51,10 +51,10 @@ def _downloadFiles(files,downloadDirectory):
 				logging.error(traceback.format_exc())
 				print(type(e))
 				raise
-			
+
 			downloadedSHA256 = _calcSHA256(downloadedPath)
 			assert downloadedSHA256 == expectedSHA256, "SHA256 mismatch with downloaded file: %s" % shortName
-			
+
 			if shortName.endswith('.zip'):
 				zip_ref = zipfile.ZipFile(downloadedPath, 'r')
 				zip_ref.extractall(path=downloadDirectory)

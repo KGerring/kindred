@@ -35,12 +35,11 @@ def convertKindredCorpusToBioCCollection(corpus):
             a.infons = {'type': e.entityType}
             a.infons.update(e.metadata)
 
-            if e.sourceEntityID is None:
-                a.id = str(e.entityID)
-            else:
-                a.id = str(e.sourceEntityID)
+            a.id = str(e.entityID) if e.sourceEntityID is None else str(e.sourceEntityID)
+            assert a.id not in seenEntityIDs, (
+                "Multiple entities with the same ID (%s) found" % a.id
+            )
 
-            assert not a.id in seenEntityIDs, "Multiple entities with the same ID (%s) found" % a.id
             seenEntityIDs.add(a.id)
             kindredID2BiocID[e.entityID] = a.id
 
@@ -77,8 +76,8 @@ def saveDocToSTFormat(doc, txtPath, a1Path, a2Path):
     assert isinstance(doc, kindred.Document)
 
     with codecs.open(txtPath, 'w', 'utf8') as txtFile, codecs.open(a1Path, 'w', 'utf8') as a1File, codecs.open(a2Path,
-                                                                                                               'w',
-                                                                                                               'utf8') as a2File:
+                                                                                                                   'w',
+                                                                                                                   'utf8') as a2File:
         txtFile.write(doc.text)
 
         for e in doc.entities:
@@ -90,7 +89,10 @@ def saveDocToSTFormat(doc, txtPath, a1Path, a2Path):
             line = "%s\t%s %s\t%s" % (e.sourceEntityID, e.entityType, positions, e.text)
             a1File.write(line + "\n")
 
-        relationsHaveSourceIDs = [not (r.sourceRelationID is None) for r in doc.relations]
+        relationsHaveSourceIDs = [
+            r.sourceRelationID is not None for r in doc.relations
+        ]
+
         assert all(relationsHaveSourceIDs) or not any(
             relationsHaveSourceIDs), "All relations must have sourceRelationID or none can have them."
 
@@ -123,18 +125,17 @@ def saveCorpusToPubAnnotationFormat(corpus, path):
 
     pubannotated = []
     for doc in corpus.documents:
-        p = {}
-        p['text'] = doc.text
-        p['denotations'] = []
-        p['relations'] = []
-
+        p = {'text': doc.text, 'denotations': [], 'relations': []}
         for e in doc.entities:
             spans = [{'begin': pos[0], 'end': pos[1]} for pos in e.position]
             if len(spans) == 1:
                 spans = spans[0]
             p['denotations'].append({'id': e.sourceEntityID, 'span': spans, 'obj': e.entityType})
 
-        relationsHaveSourceIDs = [not (r.sourceRelationID is None) for r in doc.relations]
+        relationsHaveSourceIDs = [
+            r.sourceRelationID is not None for r in doc.relations
+        ]
+
         assert all(relationsHaveSourceIDs) or not any(
             relationsHaveSourceIDs), "All relations must have sourceRelationID or none can have them."
 
@@ -167,26 +168,45 @@ def saveCorpusToCSVFormat(corpus, path):
         for e in doc.entities:
             spans = [{'begin': pos[0], 'end': pos[1]} for pos in e.position]
             entities[e.sourceEntityID] = {'span': spans, 'ent_text': e.text, 'ent_type': e.entityType}
-        relationsHaveSourceIDs = [not (r.sourceRelationID is None) for r in doc.relations]
+        relationsHaveSourceIDs = [
+            r.sourceRelationID is not None for r in doc.relations
+        ]
+
         assert all(relationsHaveSourceIDs) or not any(
             relationsHaveSourceIDs), "All relations must have sourceRelationID or none can have them."
         useSourceRelationIDs = all(relationsHaveSourceIDs)
         for i, r in enumerate(doc.relations):
-            annotation = {}
-            if useSourceRelationIDs:
-                relationID = str(r.sourceRelationID)
-            else:
-                relationID = "R%d" % (i + 1)
-            annotation['documentName'] = doc.sourceFilename
-            annotation['text'] = doc.text
-            annotation['relationID'] = relationID
-            annotation['relationType'] = r.relationType
-            annotation['entitySubject'] = entities[r.entities[0].sourceEntityID]['ent_text']
-            annotation['entitySubject_Type'] = entities[r.entities[0].sourceEntityID]['ent_type']
-            annotation['entitySubject_Pos'] = entities[r.entities[0].sourceEntityID]['span']
-            annotation['entityObject'] = entities[r.entities[1].sourceEntityID]['ent_text']
-            annotation['entityObject_Type'] = entities[r.entities[1].sourceEntityID]['ent_type']
-            annotation['entityObject_Pos'] = entities[r.entities[1].sourceEntityID]['span']
+            relationID = (
+                str(r.sourceRelationID)
+                if useSourceRelationIDs
+                else "R%d" % (i + 1)
+            )
+
+            annotation = {
+                'documentName': doc.sourceFilename,
+                'text': doc.text,
+                'relationID': relationID,
+                'relationType': r.relationType,
+                'entitySubject': entities[r.entities[0].sourceEntityID][
+                    'ent_text'
+                ],
+                'entitySubject_Type': entities[r.entities[0].sourceEntityID][
+                    'ent_type'
+                ],
+                'entitySubject_Pos': entities[r.entities[0].sourceEntityID][
+                    'span'
+                ],
+                'entityObject': entities[r.entities[1].sourceEntityID][
+                    'ent_text'
+                ],
+                'entityObject_Type': entities[r.entities[1].sourceEntityID][
+                    'ent_type'
+                ],
+                'entityObject_Pos': entities[r.entities[1].sourceEntityID][
+                    'span'
+                ],
+            }
+
             csv_annotations.append(annotation)
     if csv_annotations:
         keys = csv_annotations[0].keys()
@@ -216,11 +236,7 @@ def save(corpus, dataFormat, path):
         assert os.path.isdir(path), "Path must be an existing directory"
 
         for i, d in enumerate(corpus.documents):
-            if d.sourceFilename is None:
-                base = "%08d" % i
-            else:
-                base = d.sourceFilename
-
+            base = "%08d" % i if d.sourceFilename is None else d.sourceFilename
             txtPath = os.path.join(path, '%s.txt' % base)
             a1Path = os.path.join(path, '%s.a1' % base)
             a2Path = os.path.join(path, '%s.a2' % base)

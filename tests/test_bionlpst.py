@@ -28,8 +28,8 @@ def test_loadBioNLP_BB3_event_train():
 	assert isinstance(corpus,kindred.Corpus)
 
 	fileCount = len(corpus.documents)
-	entityCount = sum([ len(d.entities) for d in corpus.documents ])
-	relationCount = sum([ len(d.relations) for d in corpus.documents ])
+	entityCount = sum(len(d.entities) for d in corpus.documents)
+	relationCount = sum(len(d.relations) for d in corpus.documents)
 
 	assert fileCount == 61
 	assert relationCount == 327
@@ -42,8 +42,8 @@ def test_loadBioNLP_BB3_event_dev():
 	assert isinstance(corpus,kindred.Corpus)
 
 	fileCount = len(corpus.documents)
-	entityCount = sum([ len(d.entities) for d in corpus.documents ])
-	relationCount = sum([ len(d.relations) for d in corpus.documents ])
+	entityCount = sum(len(d.entities) for d in corpus.documents)
+	relationCount = sum(len(d.relations) for d in corpus.documents)
 
 	assert fileCount == 34
 	assert relationCount == 223
@@ -51,12 +51,12 @@ def test_loadBioNLP_BB3_event_dev():
 
 def test_loadBioNLP_BB3_event_test():
 	corpus = kindred.bionlpst.load('2016-BB3-event-test')#,,ignoreEntities=['Title','Paragraph'])
-	
+
 	assert isinstance(corpus,kindred.Corpus)
 
 	fileCount = len(corpus.documents)
-	entityCount = sum([ len(d.entities) for d in corpus.documents ])
-	relationCount = sum([ len(d.relations) for d in corpus.documents ])
+	entityCount = sum(len(d.entities) for d in corpus.documents)
+	relationCount = sum(len(d.relations) for d in corpus.documents)
 
 	assert fileCount == 51
 	assert relationCount == 0
@@ -64,12 +64,12 @@ def test_loadBioNLP_BB3_event_test():
 
 def test_loadBioNLP_SeeDev_binary_train():
 	corpus = kindred.bionlpst.load('2016-SeeDev-binary-train')
-	
+
 	assert isinstance(corpus,kindred.Corpus)
 
 	fileCount = len(corpus.documents)
-	entityCount = sum([ len(d.entities) for d in corpus.documents ])
-	relationCount = sum([ len(d.relations) for d in corpus.documents ])
+	entityCount = sum(len(d.entities) for d in corpus.documents)
+	relationCount = sum(len(d.relations) for d in corpus.documents)
 
 	assert fileCount == 39
 	assert relationCount == 1628
@@ -81,8 +81,8 @@ def test_loadBioNLP_SeeDev_binary_dev():
 	assert isinstance(corpus,kindred.Corpus)
 
 	fileCount = len(corpus.documents)
-	entityCount = sum([ len(d.entities) for d in corpus.documents ])
-	relationCount = sum([ len(d.relations) for d in corpus.documents ])
+	entityCount = sum(len(d.entities) for d in corpus.documents)
+	relationCount = sum(len(d.relations) for d in corpus.documents)
 
 	assert fileCount == 19
 	assert relationCount == 819
@@ -94,8 +94,8 @@ def test_loadBioNLP_SeeDev_binary_test():
 	assert isinstance(corpus,kindred.Corpus)
 
 	fileCount = len(corpus.documents)
-	entityCount = sum([ len(d.entities) for d in corpus.documents ])
-	relationCount = sum([ len(d.relations) for d in corpus.documents ])
+	entityCount = sum(len(d.entities) for d in corpus.documents)
+	relationCount = sum(len(d.relations) for d in corpus.documents)
 
 	assert fileCount == 29
 	assert relationCount == 0
@@ -107,8 +107,8 @@ def test_loadBioNLP_SeeDev_full_train():
 	assert isinstance(corpus,kindred.Corpus)
 
 	fileCount = len(corpus.documents)
-	entityCount = sum([ len(d.entities) for d in corpus.documents ])
-	relationCount = sum([ len(d.relations) for d in corpus.documents ])
+	entityCount = sum(len(d.entities) for d in corpus.documents)
+	relationCount = sum(len(d.relations) for d in corpus.documents)
 
 	assert fileCount == 39
 	assert relationCount == 1158
@@ -120,8 +120,8 @@ def test_loadBioNLP_SeeDev_full_dev():
 	assert isinstance(corpus,kindred.Corpus)
 
 	fileCount = len(corpus.documents)
-	entityCount = sum([ len(d.entities) for d in corpus.documents ])
-	relationCount = sum([ len(d.relations) for d in corpus.documents ])
+	entityCount = sum(len(d.entities) for d in corpus.documents)
+	relationCount = sum(len(d.relations) for d in corpus.documents)
 
 	assert fileCount == 19
 	assert relationCount == 588
@@ -129,12 +129,12 @@ def test_loadBioNLP_SeeDev_full_dev():
 
 def test_loadBioNLP_SeeDev_full_test():
 	corpus = kindred.bionlpst.load('2016-SeeDev-full-test')
-	
+
 	assert isinstance(corpus,kindred.Corpus)
 
 	fileCount = len(corpus.documents)
-	entityCount = sum([ len(d.entities) for d in corpus.documents ])
-	relationCount = sum([ len(d.relations) for d in corpus.documents ])
+	entityCount = sum(len(d.entities) for d in corpus.documents)
+	relationCount = sum(len(d.relations) for d in corpus.documents)
 
 	assert fileCount == 29
 	assert relationCount == 0

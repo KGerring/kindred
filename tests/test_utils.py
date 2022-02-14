@@ -21,7 +21,7 @@ def test_loadBioNLP_findDir():
 		actualDirPath = os.path.join(tempDir,'actualDir')
 		os.mkdir(actualDirPath)
 		assert kindred.utils._findDir('actualDir',tempDir) == actualDirPath
-		assert kindred.utils._findDir('doesntExist',tempDir) == None
+		assert kindred.utils._findDir('doesntExist',tempDir) is None
 
 def test_corruptFileInWayOfDownload():
 	with TempDir() as tempDir:

@@ -60,11 +60,19 @@ class Entity:
 		Entity._nextInternalID += 1
 		
 	def __str__(self):
-		if self.externalID is None:
-			out = "<Entity %s:'%s' sourceid=%s %s>" % (self.entityType,self.text,str(self.sourceEntityID),str(self.position))
-		else:
-			out = "<Entity %s:'%s' sourceid=%s externalid=%s %s>" % (self.entityType,self.text,str(self.sourceEntityID),str(self.externalID),str(self.position))
-		return out
+		return ("<Entity %s:'%s' sourceid=%s %s>" % (
+		    self.entityType,
+		    self.text,
+		    str(self.sourceEntityID),
+		    str(self.position),
+		) if self.externalID is None else
+		        "<Entity %s:'%s' sourceid=%s externalid=%s %s>" % (
+		            self.entityType,
+		            self.text,
+		            str(self.sourceEntityID),
+		            str(self.externalID),
+		            str(self.position),
+		        ))
 		
 	def __repr__(self):
 		return self.__str__()
@@ -90,6 +98,12 @@ class Entity:
 		:rtype: kindred.Entity
 		"""
 
-		cloned = Entity(self.entityType,self.text,list(self.position),self.sourceEntityID,self.externalID,dict(self.metadata))
-		return cloned
+		return Entity(
+		    self.entityType,
+		    self.text,
+		    list(self.position),
+		    self.sourceEntityID,
+		    self.externalID,
+		    dict(self.metadata),
+		)
 

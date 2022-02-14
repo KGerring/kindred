@@ -29,7 +29,7 @@ class Parser:
 
 		self.model = model
 
-		if not model in Parser._models:
+		if model not in Parser._models:
 			Parser._models[model] = spacy.load(model, disable=['ner'])
 
 		self.nlp = Parser._models[model]
@@ -40,8 +40,7 @@ class Parser:
 
 		parsed = self.nlp(text)
 
-		for sent in parsed.sents:
-			yield sent
+		yield from parsed.sents
 
 	def parse(self,corpus):
 		"""

@@ -56,10 +56,10 @@ class RelationClassifier:
 		self.acceptedEntityTypes = acceptedEntityTypes
 
 		self.chosenFeatures = ["entityTypes","unigramsBetweenEntities","bigrams","dependencyPathEdges","dependencyPathEdgesNearEntities"]
-		if not features is None:
+		if features is not None:
 			assert isinstance(features,list)
 			self.chosenFeatures = features
-			
+
 		self.threshold = threshold
 		self.model = model
 
@@ -75,7 +75,7 @@ class RelationClassifier:
 		if not corpus.parsed:
 			parser = kindred.Parser(model=self.model)
 			parser.parse(corpus)
-		
+
 		self.candidateBuilder = CandidateBuilder(entityCount=self.entityCount,acceptedEntityTypes=self.acceptedEntityTypes)
 		candidateRelations = self.candidateBuilder.build(corpus)
 
@@ -88,13 +88,13 @@ class RelationClassifier:
 			for knownType,knownArgNames in cr.knownTypesAndArgNames:
 				relKey = tuple([knownType] + knownArgNames)
 				candidateRelationKeys.add(relKey)
-		
+
 		# Create mappings from the class index to a relation type and back again
 		self.colToRelType = sorted(list(candidateRelationKeys))
 		self.relTypeToCol = { relationType:i for i,relationType in enumerate(self.colToRelType) }
-		
+
 		Y = np.zeros((len(candidateRelations),len(self.colToRelType)),np.int32)
-		
+
 		candidateClasses = []
 		for i,cr in enumerate(candidateRelations):
 			for knownType,knownArgNames in cr.knownTypesAndArgNames:
@@ -102,7 +102,7 @@ class RelationClassifier:
 				col = self.relTypeToCol[relKey]
 				Y[i,col] = 1
 
-		entityCountsInRelations = set([ len(r.entities) for r in corpus.getRelations() ])
+		entityCountsInRelations = {len(r.entities) for r in corpus.getRelations()}
 		entityCountsInRelations = sorted(list(set(entityCountsInRelations)))
 		assert self.entityCount in entityCountsInRelations, "Relation classifier is expecting to train on relations with %d entities (entityCount=%d). But the known relations in the corpus contain relations with the following entity counts: %s. Perhaps the entityCount parameter should be changed or there is a problem with the training corpus." % (self.entityCount,self.entityCount,str(entityCountsInRelations))
 
@@ -110,14 +110,14 @@ class RelationClassifier:
 
 		for d in corpus.documents:
 			for r in d.relations:
-				validEntityTypes = tuple([ e.entityType for e in r.entities ])
-				
+				validEntityTypes = tuple(e.entityType for e in r.entities)
+
 				relKey = tuple([r.relationType] + r.argNames)
 				self.relTypeToValidEntityTypes[relKey].add(validEntityTypes)
 
 		self.vectorizer = Vectorizer(entityCount=self.entityCount,featureChoice=self.chosenFeatures,tfidf=self.tfidf)
 		trainVectors = self.vectorizer.fit_transform(candidateRelations)
-	
+
 		assert trainVectors.shape[0] == Y.shape[0]
 
 		posCount = Y.sum()
@@ -131,11 +131,11 @@ class RelationClassifier:
 			self.clf = kindred.MultiLabelClassifier(svm.LinearSVC,class_weight='balanced',random_state=1,max_iter=10000)
 		elif self.classifierType == 'LogisticRegression' and self.threshold is None:
 			self.clf = kindred.MultiLabelClassifier(LogisticRegression,class_weight='balanced',random_state=1,solver='liblinear',multi_class='ovr')
-		elif self.classifierType == 'LogisticRegression' and not self.threshold is None:
+		elif self.classifierType == 'LogisticRegression':
 			self.clf = kindred.MultiLabelClassifier(kindred.LogisticRegressionWithThreshold,threshold=self.threshold)
-		
+
 		self.clf.fit(trainVectors,Y)
-		
+
 		self.isTrained = True
 
 	def predict(self,corpus):
@@ -146,19 +146,19 @@ class RelationClassifier:
 		:type corpus: kindred.Corpus
 		"""
 		assert self.isTrained, "Classifier must be trained using train() before predictions can be made"
-	
+
 		assert isinstance(corpus,kindred.Corpus)
-		
+
 		if not corpus.parsed:
 			parser = kindred.Parser(model=self.model)
 			parser.parse(corpus)
-		
+
 		candidateRelations = self.candidateBuilder.build(corpus)
 
 		# Check if there are any candidate relations to classify in this corpus
 		if len(candidateRelations) == 0:
 			return
-		
+
 		predictedRelations = []
 		testVectors = self.vectorizer.transform(candidateRelations)
 
@@ -179,9 +179,11 @@ class RelationClassifier:
 			relKey = self.colToRelType[matrixCol]
 			relType = relKey[0]
 			argNames = relKey[1:]
-			
-			candidateRelationEntityTypes = tuple( [ e.entityType for e in candidateRelation.entities ] )
-			if not tuple(candidateRelationEntityTypes) in self.relTypeToValidEntityTypes[relKey]:
+
+			candidateRelationEntityTypes = tuple(
+			    e.entityType for e in candidateRelation.entities)
+			if (tuple(candidateRelationEntityTypes) not in
+			    self.relTypeToValidEntityTypes[relKey]):
 				continue
 
 			predictedRelation = kindred.Relation(relType,candidateRelation.entities,argNames=argNames,probability=predictedProb)
@@ -200,6 +202,6 @@ class RelationClassifier:
 			assert len(docIDs) == 1, "Predicted relation contains entities that are spread across documents"
 
 			docID = docIDs[0]
-			if not predictedRelation in corpus.documents[docID].relations:
+			if predictedRelation not in corpus.documents[docID].relations:
 				corpus.documents[docID].addRelation(predictedRelation)
 

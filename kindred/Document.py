@@ -33,11 +33,7 @@ class Document:
 
 		self.sourceFilename = sourceFilename
 
-		if metadata is None:
-			self.metadata = {}
-		else:
-			self.metadata = metadata
-
+		self.metadata = {} if metadata is None else metadata
 		if loadFromSimpleTag:
 			assert entities is None and relations is None, 'Entities and relations will be extracted from SimpleTag. They cannot also be passed in as parameters'
 
@@ -48,7 +44,7 @@ class Document:
 			self.relations = docToCopy.relations
 		else:
 			self.text = text
-			
+
 			if entities is None:
 				self.entities = []
 			else:
@@ -56,7 +52,7 @@ class Document:
 				for e in entities:
 					assert isinstance(e,kindred.Entity)
 				self.entities = entities
-			
+
 			if relations is None:
 				self.relations = []
 			else:
@@ -98,8 +94,11 @@ class Document:
 
 		if self.sentences:
 			for sentence in self.sentences:
-				overlappingTokens = [ i for i,t in enumerate(sentence.tokens) if any (not (t.endPos <= eStart or t.startPos >= eEnd) for eStart,eEnd in entity.position ) ]
-				if overlappingTokens:
+				if overlappingTokens := [
+				    i for i, t in enumerate(sentence.tokens)
+				    if any(t.endPos > eStart and t.startPos < eEnd
+				           for eStart, eEnd in entity.position)
+				]:
 					sentence.addEntityAnnotation(entity,overlappingTokens)
 
 	def addRelation(self,relation):
@@ -131,8 +130,12 @@ class Document:
 		:rtype: kindred.Document
 		"""
 
-		cloned = Document(self.text,entities=self.entities,relations=self.relations,sourceFilename=self.sourceFilename)
-		return cloned
+		return Document(
+		    self.text,
+		    entities=self.entities,
+		    relations=self.relations,
+		    sourceFilename=self.sourceFilename,
+		)
 
 	def removeEntities(self):
 		"""

@@ -89,7 +89,7 @@ with codecs.open(setupPyPath,'r','utf-8') as f:
 		if line.startswith('VERSION'):
 			release = line.strip().replace('VERSION','').replace("'","").replace(' ','').strip()
 			break
-assert not release is None
+assert release is not None
 releaseSplit = release.split('.')
 version = ".".join(releaseSplit[:2])
 

@@ -30,7 +30,7 @@ def customSample(population,k):
 	listclone = list(population)
 	assert k <= len(population)
 	chosen = []
-	for i in range(k):
+	for _ in range(k):
 		choice = int(customRandom() * len(listclone) )
 		item = listclone.pop(choice)
 		chosen.append(item)
@@ -39,7 +39,7 @@ def customSample(population,k):
 def generateData(entityCount=2,positiveCount=100,negativeCount=100,relTypes=1):
 	customSeed(b'seed')
 
-	assert entityCount == 2 or entityCount == 3
+	assert entityCount in [2, 3]
 
 	fakeDrugNames = ['bmzvpvwbpw','pehhjnlvve''wbjccovflf','usckfljzxu','ruswdgzajr','vgypkemhjr','oxzbaapqct','elvptnpvyc']
 	fakeDiseaseNames = ['gnorcyvmer','hfymprbifs','ootopaoxbg','knetvjnjun','kfjqxlpvew','zgwivlcmly','kneqlzjegs','kyekjnkrfo']
@@ -63,9 +63,9 @@ def generateData(entityCount=2,positiveCount=100,negativeCount=100,relTypes=1):
 							'<drug id="ID1">DRUG</drug>, a <gene id="ID3">GENE</gene> inhibitor, is the main cause of <disease2 id="ID2">DISEASE</disease2>.',
 							'<drug id="ID1">DRUG</drug>, which targets <gene id="ID3">GENE</gene>, failed clinical trials for <disease2 id="ID2">DISEASE</disease2>.',
 							'<disease2 id="ID2">DISEASE</disease2> is a known side effect of <drug id="ID1">DRUG</drug> due to interaction with <gene id="ID3">GENE</gene>.']
-						
 
-	
+
+
 	relNames = [ "treats_%d" % i for i in range(relTypes) ]
 
 	entityID = 1
@@ -75,7 +75,7 @@ def generateData(entityCount=2,positiveCount=100,negativeCount=100,relTypes=1):
 
 		text = text.replace('DRUG',customChoice(fakeDrugNames))
 		text = text.replace('DISEASE',customChoice(fakeDiseaseNames))
-		
+
 		text = text.replace('ID1',str(entityID))
 		text = text.replace('ID2',str(entityID+1))
 
@@ -87,12 +87,12 @@ def generateData(entityCount=2,positiveCount=100,negativeCount=100,relTypes=1):
 			text = text.replace('GENE',customChoice(fakeGeneNames))
 			text = text.replace('ID3',str(entityID+2))
 			text += '<relation type="%s" subj="%d" obj="%d" target="%d" />' % (relName,entityID,entityID+1,entityID+2)
-		
+
 		entityID += entityCount
-		
+
 		converted = kindred.Document(text,loadFromSimpleTag=True)
 		corpus.addDocument(converted)
-		
+
 	halfNegativeCount = int(negativeCount/2.0)
 	for _ in range(halfNegativeCount):
 		combinedText = ""
@@ -100,22 +100,22 @@ def generateData(entityCount=2,positiveCount=100,negativeCount=100,relTypes=1):
 			text = customChoice(negativePatterns)
 			text = text.replace('DRUG',customChoice(fakeDrugNames))
 			text = text.replace('DISEASE',customChoice(fakeDiseaseNames))
-			
+
 			text = text.replace('ID1',str(entityID))
 			text = text.replace('ID2',str(entityID+1))
 
 			if entityCount == 3:
 				text = text.replace('GENE',customChoice(fakeGeneNames))
 				text = text.replace('ID3',str(entityID+2))
-			
+
 			entityID += entityCount
-		
+
 			combinedText = "%s %s" % (combinedText,text)
 
-		
+
 		converted = kindred.Document(combinedText,loadFromSimpleTag=True)
 		corpus.addDocument(converted)
-		
+
 	return corpus
 	
 def generateTestData(entityCount = 2, positiveCount = 100,negativeCount = 100, relTypes = 1):
@@ -124,7 +124,7 @@ def generateTestData(entityCount = 2, positiveCount = 100,negativeCount = 100, r
 	docCount = len(corpus.documents)
 	halfDataCount = int(docCount/2.0)
 	trainIndices = customSample(range(docCount),halfDataCount)
-	testIndices = [ i for i in range(docCount) if not i in trainIndices ]
+	testIndices = [i for i in range(docCount) if i not in trainIndices]
 
 	trainCorpus = kindred.Corpus()
 	testCorpus = kindred.Corpus()

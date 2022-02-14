@@ -11,11 +11,11 @@ import bioc
 
 def _loadPMID(pmid,retries=3):
 	assert isinstance(pmid,int)
-	
+
 	annotationsURL = "https://www.ncbi.nlm.nih.gov/research/pubtator-api/publications/export/biocxml?pmids=%d" % pmid
 
 	success = False
-	for retry in range(retries):
+	for _ in range(retries):
 		try:
 			request = requests.get(annotationsURL)
 			annotations = request.text
@@ -30,10 +30,9 @@ def _loadPMID(pmid,retries=3):
 	collection = bioc.load(io.BytesIO(annotations.encode()))
 	assert isinstance(collection,bioc.BioCCollection)
 	assert len(collection.documents) == 1
-	
-	documents = kindred.loadFunctions.convertBiocDocToKindredDocs(collection.documents[0])
 
-	return documents
+	return kindred.loadFunctions.convertBiocDocToKindredDocs(
+	    collection.documents[0])
 
 def load(pmids):
 	"""
@@ -49,7 +48,7 @@ def load(pmids):
 	:rtype: kindred.Corpus
 	"""
 
-	assert isinstance(pmids,list) or isinstance(pmids,int)
+	assert isinstance(pmids, (list, int))
 
 	corpus = kindred.Corpus()
 	if isinstance(pmids,list):

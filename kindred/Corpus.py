@@ -20,7 +20,7 @@ class Corpus:
 		"""
 
 		self.documents = []
-		if not text is None:
+		if text is not None:
 			doc = kindred.Document(text,loadFromSimpleTag=loadFromSimpleTag)
 			self.addDocument(doc)
 

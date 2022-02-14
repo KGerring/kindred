@@ -27,7 +27,7 @@ def evaluate(goldCorpus,testCorpus,metric='f1score',display=False):
 		assert d1.text == d2.text, mismatchMessage
 
 	TPs,FPs,FNs = Counter(),Counter(),Counter()
-	
+
 	goldTuples = [ (r.relationType,tuple(r.entities)) for r in goldCorpus.getRelations() ]
 	testTuples = [ (r.relationType,tuple(r.entities)) for r in testCorpus.getRelations() ]
 
@@ -37,7 +37,7 @@ def evaluate(goldCorpus,testCorpus,metric='f1score',display=False):
 		inTest = relation in testTuples
 
 		relType = relation[0]
-		
+
 		if inGold and inTest:
 			TPs[relType] += 1
 		elif inGold:
@@ -45,9 +45,9 @@ def evaluate(goldCorpus,testCorpus,metric='f1score',display=False):
 		elif inTest:
 			FPs[relType] += 1
 
-	sortedRelTypes = sorted( list(set( [relation[0] for relation in totalSet] )))
+	sortedRelTypes = sorted(list({relation[0] for relation in totalSet}))
 
-	maxLen = max( [len(rt) for rt in sortedRelTypes ] )
+	maxLen = max(len(rt) for rt in sortedRelTypes)
 	formatString = '%-' + str(maxLen) + 's\tTP:%d FP:%d FN:%d\tP:%f R:%f F1:%f'
 
 	for relType in sortedRelTypes:
@@ -55,7 +55,7 @@ def evaluate(goldCorpus,testCorpus,metric='f1score',display=False):
 		precision = 0.0 if (TP+FP) == 0 else TP / float(TP+FP)
 		recall = 0.0 if (TP+FN) == 0 else TP / float(TP+FN)
 		f1score = 0.0 if precision==0 or recall == 0 else 2 * (precision*recall) / (precision+recall)
-	
+
 		if display:
 			print(formatString % (relType,TP,FP,FN,precision,recall,f1score))
 
